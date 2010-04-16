@@ -1,0 +1,8 @@
+
+---- EXPECTED OUTPUT
+/tmp
+/tmp
+---- ACTUAL OUTPUT
+/var/tmp/
+/var/tmp/
+---- FAILED

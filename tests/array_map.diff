@@ -1,0 +1,3 @@
+004- %w%f %w%d       -> strlen('a') /%s/array_map.php:0
+005- %w%f %w%d       -> strlen('bb') /%s/array_map.php:0
+006- %w%f %w%d       -> strlen('ccc') /%s/array_map.php:0

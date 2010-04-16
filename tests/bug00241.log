@@ -1,0 +1,174 @@
+
+---- EXPECTED OUTPUT
+array(5) {
+  [0]=>
+  array(4) {
+    ["function"]=>
+    string(6) "{main}"
+    ["file"]=>
+    string(%d) "%sbug00241.php"
+    ["line"]=>
+    int(0)
+    ["params"]=>
+    array(0) {
+    }
+  }
+  [1]=>
+  array(4) {
+    ["function"]=>
+    string(13) "error_handler"
+    ["file"]=>
+    string(%d) "%sbug00241.php"
+    ["line"]=>
+    int(0)
+    ["params"]=>
+    array(5) {
+      ["errno"]=>
+      string(1) "8"
+      ["string"]=>
+      string(22) "'Undefined index: FOO'"
+      ["file"]=>
+      string(%d) "'%sbug00241.php'"
+      ["line"]=>
+      string(2) "32"
+      ["context"]=>
+      string(%d) "array ('GLOBALS' => ..., '_ENV' => array ('%s' => '%s', '%s' => '%s', ...), ...)"
+    }
+  }
+  [2]=>
+  array(5) {
+    ["function"]=>
+    string(8) "newError"
+    ["class"]=>
+    string(11) "Error_Class"
+    ["file"]=>
+    string(%d) "%sbug00241.php"
+    ["line"]=>
+    int(4)
+    ["params"]=>
+    array(1) {
+      ["errno"]=>
+      string(4) "NULL"
+    }
+  }
+  [3]=>
+  array(5) {
+    ["function"]=>
+    string(11) "__construct"
+    ["class"]=>
+    string(11) "Error_Entry"
+    ["file"]=>
+    string(%d) "%sbug00241.php"
+    ["line"]=>
+    int(11)
+    ["params"]=>
+    array(2) {
+      ["base"]=>
+      string(5) "FALSE"
+      ["errno"]=>
+      string(5) "FALSE"
+    }
+  }
+  [4]=>
+  array(5) {
+    ["function"]=>
+    string(5) "getBT"
+    ["class"]=>
+    string(11) "Error_Class"
+    ["file"]=>
+    string(%d) "%sbug00241.php"
+    ["line"]=>
+    int(26)
+    ["params"]=>
+    array(0) {
+    }
+  }
+}
+The End
+---- ACTUAL OUTPUT
+array(5) {
+  [0]=>
+  array(4) {
+    ["function"]=>
+    string(6) "{main}"
+    ["file"]=>
+    string(42) "/Users/dsp/dev/c/xdebug/tests/bug00241.php"
+    ["line"]=>
+    int(0)
+    ["params"]=>
+    array(0) {
+    }
+  }
+  [1]=>
+  array(4) {
+    ["function"]=>
+    string(13) "error_handler"
+    ["file"]=>
+    string(42) "/Users/dsp/dev/c/xdebug/tests/bug00241.php"
+    ["line"]=>
+    int(0)
+    ["params"]=>
+    array(5) {
+      ["errno"]=>
+      string(1) "8"
+      ["string"]=>
+      string(22) "'Undefined index: FOO'"
+      ["file"]=>
+      string(44) "'/Users/dsp/dev/c/xdebug/tests/bug00241.php'"
+      ["line"]=>
+      string(2) "32"
+      ["context"]=>
+      string(98) "array ('GLOBALS' => ..., 'argv' => array (0 => '/Users/dsp/dev/c/xdebug/tests/bug00241.php'), ...)"
+    }
+  }
+  [2]=>
+  array(5) {
+    ["function"]=>
+    string(8) "newError"
+    ["class"]=>
+    string(11) "Error_Class"
+    ["file"]=>
+    string(42) "/Users/dsp/dev/c/xdebug/tests/bug00241.php"
+    ["line"]=>
+    int(4)
+    ["params"]=>
+    array(1) {
+      ["errno"]=>
+      string(0) ""
+    }
+  }
+  [3]=>
+  array(5) {
+    ["function"]=>
+    string(11) "__construct"
+    ["class"]=>
+    string(11) "Error_Entry"
+    ["file"]=>
+    string(42) "/Users/dsp/dev/c/xdebug/tests/bug00241.php"
+    ["line"]=>
+    int(11)
+    ["params"]=>
+    array(2) {
+      ["base"]=>
+      string(5) "FALSE"
+      ["errno"]=>
+      string(5) "FALSE"
+    }
+  }
+  [4]=>
+  array(5) {
+    ["function"]=>
+    string(5) "getBT"
+    ["class"]=>
+    string(11) "Error_Class"
+    ["file"]=>
+    string(42) "/Users/dsp/dev/c/xdebug/tests/bug00241.php"
+    ["line"]=>
+    int(26)
+    ["params"]=>
+    array(0) {
+    }
+  }
+}
+The End
+---- FAILED

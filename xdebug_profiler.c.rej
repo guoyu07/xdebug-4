@@ -1,0 +1,21 @@
+***************
+*** 174,180 ****
+  	xdfree(tmp_name);
+  
+  	if (fse->function.function && strcmp(fse->function.function, "{main}") == 0) {
+  		fprintf(XG(profile_file), "\nsummary: %lu %lu\n\n", (unsigned long) (fse->profile.time * 1000000));
+  	}
+  	fflush(XG(profile_file));
+  
+--- 190,200 ----
+  	xdfree(tmp_name);
+  
+  	if (fse->function.function && strcmp(fse->function.function, "{main}") == 0) {
++ #if HAVE_PHP_MEMORY_USAGE
++ 		fprintf(XG(profile_file), "\nsummary: %lu %u %lu %u\n\n", (unsigned long) (fse->profile.time * 1000000), (fse->profile.memory), (unsigned long) (fse->profile.cpu_time * 1000000), (fse->profile.peak_memory));
++ #else
+  		fprintf(XG(profile_file), "\nsummary: %lu %lu\n\n", (unsigned long) (fse->profile.time * 1000000));
++ #endif
+  	}
+  	fflush(XG(profile_file));
+  
