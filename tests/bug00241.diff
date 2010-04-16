@@ -1,4 +1,4 @@
-033+       string(98) "array ('GLOBALS' => ..., 'argv' => array (0 => '/Users/dsp/dev/c/xdebug/tests/bug00241.php'), ...)"
+033+       string(99) "array ('GLOBALS' => ..., 'argv' => array (0 => '/Users/johann/src/xdebug/tests/bug00241.php'), ...)"
 033-       string(%d) "array ('GLOBALS' => ..., '_ENV' => array ('%s' => '%s', '%s' => '%s', ...), ...)"
 049+       string(0) ""
 049-       string(4) "NULL"

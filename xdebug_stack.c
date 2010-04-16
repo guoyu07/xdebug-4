@@ -18,7 +18,6 @@
 #include "php_xdebug.h"
 #include "xdebug_private.h"
 #include "xdebug_code_coverage.h"
-#include "xdebug_compat.h"
 #include "xdebug_profiler.h"
 #include "xdebug_stack.h"
 #include "xdebug_str.h"
@@ -90,12 +89,6 @@ static void dump_used_var_with_contents(void *htmlq, xdebug_hash_element* he, vo
 	if (strcmp(name, "this") == 0 || strcmp(name, "GLOBALS") == 0) {
 		return;
 	}
-
-#if PHP_VERSION_ID >= 50300
-	if (!EG(active_symbol_table)) {
-		zend_rebuild_symbol_table(TSRMLS_C);
-	}
-#endif
 
 	tmp_ht = XG(active_symbol_table);
 	XG(active_symbol_table) = EG(active_symbol_table);
@@ -259,17 +252,9 @@ void xdebug_append_printable_stack(xdebug_str *str, int html TSRMLS_DC)
 			i = XDEBUG_LLIST_VALP(le);
 			tmp_name = xdebug_show_fname(i->function, html, 0 TSRMLS_CC);
 			if (html) {
-#if HAVE_PHP_MEMORY_USAGE
 				xdebug_str_add(str, xdebug_sprintf(formats[3], i->level, i->time - XG(start_time), i->memory, tmp_name), 1);
-#else
-				xdebug_str_add(str, xdebug_sprintf(formats[3], i->level, i->time - XG(start_time), tmp_name), 1);
-#endif
 			} else {
-#if HAVE_PHP_MEMORY_USAGE
 				xdebug_str_add(str, xdebug_sprintf(formats[3], i->time - XG(start_time), i->memory, i->level, tmp_name), 1);
-#else
-				xdebug_str_add(str, xdebug_sprintf(formats[3], i->time - XG(start_time), i->level, tmp_name), 1);
-#endif
 			}
 			xdfree(tmp_name);
 
@@ -822,15 +807,13 @@ function_stack_entry *xdebug_add_stack_frame(zend_execute_data *zdata, zend_op_a
 	if (!tmp->filename && XDEBUG_LLIST_TAIL(XG(stack)) && XDEBUG_LLIST_VALP(XDEBUG_LLIST_TAIL(XG(stack))) ) {
 		tmp->filename = xdstrdup(((function_stack_entry*) XDEBUG_LLIST_VALP(XDEBUG_LLIST_TAIL(XG(stack))))->filename);
 	}
-#if HAVE_PHP_MEMORY_USAGE
 	tmp->prev_memory = XG(prev_memory);
 	tmp->memory = XG_MEMORY_USAGE();
+        tmp->peakmemory = XG(peakprev_memory);
 	XG(prev_memory) = tmp->memory;
-#else
-	tmp->memory = 0;
-	tmp->prev_memory = 0;
-#endif
+        XG(peakprev_memory) = tmp->peakmemory;
 	tmp->time   = xdebug_get_utime();
+        tmp->cputime = xdebug_get_cputime();
 	tmp->lineno = 0;
 
 	xdebug_build_fname(&(tmp->function), zdata TSRMLS_CC);

@@ -1,5 +1,7 @@
+001+ ** ERROR: process timed out **
 001- <?xml version="1.0" encoding="iso-8859-1"?>
 002- <init xmlns="urn:debugger_protocol_v1" xmlns:xdebug="http://xdebug.org/dbgp/xdebug" fileuri="file:///tmp/xdebug-dbgp-test.php" language="PHP" protocol_version="1.0" appid="" idekey=""><engine version=""><![CDATA[Xdebug]]></engine><author><![CDATA[Derick Rethans]]></author><url><![CDATA[http://xdebug.org]]></url><copyright><![CDATA[Copyright (c) 2002-2010 by Derick Rethans]]></copyright></init>
+003- 
 004- -> step_into -i 1
 005- <?xml version="1.0" encoding="iso-8859-1"?>
 006- <response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="http://xdebug.org/dbgp/xdebug" command="step_into" transaction_id="1" status="break" reason="ok"><xdebug:message filename="file:///tmp/xdebug-dbgp-test.php" lineno="2"></xdebug:message></response>

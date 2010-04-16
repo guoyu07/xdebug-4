@@ -1,3 +1,3 @@
-TRACE START [2010-05-18 17:18:09]
-    0.0009     622344     -> foo(array ('te"st\'s' => 42)) /Users/dsp/dev/c/xdebug/tests/bug00146.php:10
-    0.0010     622416     -> file_get_contents('/tmp/xdt4bf2cbd10dd372.21621524.xt') /Users/dsp/dev/c/xdebug/tests/bug00146.php:12
+TRACE START [2010-04-16 12:23:43]
+    0.0007     626424     -> foo(array ('te"st\'s' => 42)) /Users/johann/src/xdebug/tests/bug00146.php:10
+    0.0008     626472     -> file_get_contents('/tmp/xdt4bc856cf7e16f3.03623443.xt') /Users/johann/src/xdebug/tests/bug00146.php:12

@@ -136,6 +136,9 @@ typedef struct _xdebug_call_entry {
 	char       *function;
 	int         lineno;
 	double      time_taken;
+	double	    cputime_taken;
+	long        mem_used;
+        long 	    peakmem_used;
 } xdebug_call_entry;
 
 typedef struct xdebug_aggregate_entry {
@@ -146,13 +149,22 @@ typedef struct xdebug_aggregate_entry {
 	int         call_count;
 	double      time_own;
 	double      time_inclusive;
+        double      cputime_own;
+        double      cputime_inclusive;
+	long        mem_used;
+        long        peakmem_used;
 	HashTable  *call_list;
 } xdebug_aggregate_entry;
 
 typedef struct xdebug_profile {
 	double        time;
+	double	      cputime;
 	double        mark;
+        double        cpumark;
 	long          memory;
+        long          peakmemory;
+	long          mem_mark;
+        long          peakmem_mark;
 	xdebug_llist *call_list;
 } xdebug_profile;
 
@@ -179,8 +191,11 @@ typedef struct _function_stack_entry {
 
 	/* tracing properties */
 	signed long  memory;
+        signed long  peakmemory; 
 	signed long  prev_memory;
+        signed long  peakprev_memory;
 	double       time;
+        double       cputime;
 
 	/* profiling properties */
 	xdebug_profile profile;

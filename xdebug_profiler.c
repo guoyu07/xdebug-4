@@ -82,7 +82,7 @@ int xdebug_profiler_init(char *script_name TSRMLS_DC)
 	if (XG(profiler_append)) {
 		fprintf(XG(profile_file), "\n==== NEW PROFILING FILE ==============================================\n");
 	}
-	fprintf(XG(profile_file), "version: 0.9.6\ncmd: %s\npart: 1\n\nevents: Time\n\n", script_name);
+	fprintf(XG(profile_file), "version: 0.9.6\ncmd: %s\npart: 1\n\nevents: Time Memory Cycles Peakmemory\n\n", script_name);
 	fflush(XG(profile_file));
 	return SUCCESS;
 }
@@ -107,11 +107,21 @@ static inline void xdebug_profiler_function_push(function_stack_entry *fse)
 	fse->profile.time += xdebug_get_utime();
 	fse->profile.time -= fse->profile.mark;
 	fse->profile.mark = 0;
+        fse->profile.cputime += xdebug_get_cputime();
+        fse->profile.cputime -= fse->profile.cpumark;
+        fse->profile.cpumark = 0;
+	fse->profile.memory += XG_MEMORY_USAGE();
+	fse->profile.memory -= fse->profile.mem_mark;
+	fse->profile.mem_mark = 0;
+        fse->profile.peakmemory += XG_MEMORY_PEAK_USAGE();
+        fse->profile.peakmemory -= fse->profile.peakmem_mark;
+	fse->profile.peakmem_mark = 0;
 }
 
 void xdebug_profiler_function_continue(function_stack_entry *fse)
 {
 	fse->profile.mark = xdebug_get_utime();
+        fse->profile.cpumark = xdebug_get_cputime();
 }
 
 void xdebug_profiler_function_pause(function_stack_entry *fse)
@@ -123,6 +133,12 @@ void xdebug_profiler_function_user_begin(function_stack_entry *fse TSRMLS_DC)
 {
 	fse->profile.time = 0;
 	fse->profile.mark = xdebug_get_utime();
+	fse->profile.cputime = 0; 
+        fse->profile.cpumark = xdebug_get_cputime();
+	fse->profile.memory = 0;
+	fse->profile.mem_mark = XG_MEMORY_USAGE();
+	fse->profile.peakmemory = 0;
+        fse->profile.peakmem_mark = XG_MEMORY_PEAK_USAGE();
 }
 
 
@@ -155,9 +171,11 @@ void xdebug_profiler_function_user_end(function_stack_entry *fse, zend_op_array*
 		ce->filename = xdstrdup(fse->filename);
 		ce->function = xdstrdup(tmp_name);
 		ce->time_taken = fse->profile.time;
+                ce->cputime_taken = fse->profile.cputime;
 		ce->lineno = fse->lineno;
 		ce->user_defined = fse->user_defined;
-
+		ce->mem_used = fse->profile.memory;
+                ce->peakmem_used = fse->profile.peakmemory;
 		xdebug_llist_insert_next(fse->prev->profile.call_list, NULL, ce);
 	}
 
@@ -174,27 +192,36 @@ void xdebug_profiler_function_user_end(function_stack_entry *fse, zend_op_array*
 	xdfree(tmp_name);
 
 	if (fse->function.function && strcmp(fse->function.function, "{main}") == 0) {
-		fprintf(XG(profile_file), "\nsummary: %lu\n\n", (unsigned long) (fse->profile.time * 1000000));
+		fprintf(XG(profile_file), "\nsummary: %lu %ld %lu %lu\n\n", (unsigned long) (fse->profile.time * 1000000), (fse->profile.memory), (unsigned long) (fse->profile.cputime), (fse->profile.peakmemory));
 	}
 	fflush(XG(profile_file));
 
 	/* update aggregate data */
 	if (XG(profiler_aggregate)) {
 		fse->aggr_entry->time_inclusive += fse->profile.time;
+                fse->aggr_entry->cputime_inclusive += fse->profile.cputime;
 		fse->aggr_entry->call_count++;
 	}
 
 	/* Subtract time in calledfunction from time here */
-	for (le = XDEBUG_LLIST_HEAD(fse->profile.call_list); le != NULL; le = XDEBUG_LLIST_NEXT(le))
+	if (fse->profile.call_list != 0) for (le = XDEBUG_LLIST_HEAD(fse->profile.call_list); le != NULL; le = XDEBUG_LLIST_NEXT(le))
 	{
 		xdebug_call_entry *call_entry = XDEBUG_LLIST_VALP(le);
 		fse->profile.time -= call_entry->time_taken;
+                fse->profile.cputime -= call_entry->cputime_taken;
+		fse->profile.memory -= call_entry->mem_used;
+                fse->profile.peakmemory -= call_entry->peakmem_used;
 	}
-	fprintf(XG(profile_file), "%d %lu\n", default_lineno, (unsigned long) (fse->profile.time * 1000000));
+	fprintf(XG(profile_file), "%d %lu %ld %lu %lu\n", default_lineno, (unsigned long) (fse->profile.time * 1000000), (fse->profile.memory), (unsigned long) (fse->profile.cputime), (fse->profile.peakmemory));
 
 	/* update aggregate data */
 	if (XG(profiler_aggregate)) {
 		fse->aggr_entry->time_own += fse->profile.time;
+                fse->aggr_entry->cputime_own += fse->profile.cputime;
+		if (fse->aggr_entry->mem_used < fse->profile.memory) {
+			fse->aggr_entry->mem_used = fse->profile.memory; 
+		}
+                fse->aggr_entry->peakmem_used += fse->profile.peakmemory;
 	}
 
 	/* dump call list */
@@ -207,9 +234,8 @@ void xdebug_profiler_function_user_end(function_stack_entry *fse, zend_op_array*
 		} else {
 			fprintf(XG(profile_file), "cfn=php::%s\n", call_entry->function);
 		}
-		
 		fprintf(XG(profile_file), "calls=1 0 0\n");
-		fprintf(XG(profile_file), "%d %lu\n", call_entry->lineno, (unsigned long) (call_entry->time_taken * 1000000));
+		fprintf(XG(profile_file), "%d %lu %ld %lu %lu\n", call_entry->lineno, (unsigned long) (call_entry->time_taken * 1000000), (call_entry->mem_used), (unsigned long) (call_entry->cputime_taken), (call_entry->peakmem_used));
 	}
 	fprintf(XG(profile_file), "\n");
 	fflush(XG(profile_file));
@@ -234,9 +260,9 @@ static int xdebug_print_aggr_entry(void *pDest, void *argument TSRMLS_DC)
 
 	fprintf(fp, "fl=%s\n", xae->filename);
 	fprintf(fp, "fn=%s\n", xae->function);
-	fprintf(fp, "%d %lu\n", 0, (unsigned long) (xae->time_own * 1000000));
+	fprintf(fp, "%d %lu %ld %lu %lu\n", 0, (unsigned long) (xae->time_own * 1000000), (xae->mem_used), (unsigned long) (xae->cputime_own), (xae->peakmem_used));
 	if (strcmp(xae->function, "{main}") == 0) {
-		fprintf(fp, "\nsummary: %lu\n\n", (unsigned long) (xae->time_inclusive * 1000000));
+		fprintf(fp, "\nsummary: %lu %ld %lu %lu\n\n", (unsigned long) (xae->time_inclusive * 1000000), (xae->mem_used), (unsigned long) (xae->cputime_inclusive), (xae->peakmem_used));
 	}
 	if (xae->call_list) {
 		xdebug_aggregate_entry **xae_call;
@@ -245,7 +271,7 @@ static int xdebug_print_aggr_entry(void *pDest, void *argument TSRMLS_DC)
 		while (zend_hash_get_current_data(xae->call_list, (void**)&xae_call) == SUCCESS) {
 			fprintf(fp, "cfn=%s\n", (*xae_call)->function);
 			fprintf(fp, "calls=%d 0 0\n", (*xae_call)->call_count);
-			fprintf(fp, "%d %lu\n", (*xae_call)->lineno, (unsigned long) ((*xae_call)->time_inclusive * 1000000));
+			fprintf(fp, "%d %lu %ld %lu %lu\n", (*xae_call)->lineno, (unsigned long) ((*xae_call)->time_inclusive * 1000000), ((*xae_call)->mem_used), (unsigned long) ((*xae_call)->cputime_inclusive ), ((*xae_call)->peakmem_used));
 			zend_hash_move_forward(xae->call_list);
 		}
 	}

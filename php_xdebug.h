@@ -25,7 +25,6 @@
 #define XDEBUG_COPYRIGHT  "Copyright (c) 2002-2010 by Derick Rethans"
 #define XDEBUG_COPYRIGHT_SHORT "Copyright (c) 2002-2010"
 #define XDEBUG_URL        "http://xdebug.org"
-#define XDEBUG_URL_FAQ    "http://xdebug.org/docs/faq#api"
 
 #include "php.h"
 
@@ -154,6 +153,7 @@ ZEND_BEGIN_MODULE_GLOBALS(xdebug)
 	zend_op_array     *active_op_array;
 	zval              *This;
 	unsigned int  prev_memory;
+        unsigned int  peakprev_memory; 
 	char         *file_link_format;
 
 	zend_bool     overload_var_dump;

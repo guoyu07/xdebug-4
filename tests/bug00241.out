@@ -4,7 +4,7 @@ array(5) {
     ["function"]=>
     string(6) "{main}"
     ["file"]=>
-    string(42) "/Users/dsp/dev/c/xdebug/tests/bug00241.php"
+    string(43) "/Users/johann/src/xdebug/tests/bug00241.php"
     ["line"]=>
     int(0)
     ["params"]=>
@@ -16,7 +16,7 @@ array(5) {
     ["function"]=>
     string(13) "error_handler"
     ["file"]=>
-    string(42) "/Users/dsp/dev/c/xdebug/tests/bug00241.php"
+    string(43) "/Users/johann/src/xdebug/tests/bug00241.php"
     ["line"]=>
     int(0)
     ["params"]=>
@@ -26,11 +26,11 @@ array(5) {
       ["string"]=>
       string(22) "'Undefined index: FOO'"
       ["file"]=>
-      string(44) "'/Users/dsp/dev/c/xdebug/tests/bug00241.php'"
+      string(45) "'/Users/johann/src/xdebug/tests/bug00241.php'"
       ["line"]=>
       string(2) "32"
       ["context"]=>
-      string(98) "array ('GLOBALS' => ..., 'argv' => array (0 => '/Users/dsp/dev/c/xdebug/tests/bug00241.php'), ...)"
+      string(99) "array ('GLOBALS' => ..., 'argv' => array (0 => '/Users/johann/src/xdebug/tests/bug00241.php'), ...)"
     }
   }
   [2]=>
@@ -40,7 +40,7 @@ array(5) {
     ["class"]=>
     string(11) "Error_Class"
     ["file"]=>
-    string(42) "/Users/dsp/dev/c/xdebug/tests/bug00241.php"
+    string(43) "/Users/johann/src/xdebug/tests/bug00241.php"
     ["line"]=>
     int(4)
     ["params"]=>
@@ -56,7 +56,7 @@ array(5) {
     ["class"]=>
     string(11) "Error_Entry"
     ["file"]=>
-    string(42) "/Users/dsp/dev/c/xdebug/tests/bug00241.php"
+    string(43) "/Users/johann/src/xdebug/tests/bug00241.php"
     ["line"]=>
     int(11)
     ["params"]=>
@@ -74,7 +74,7 @@ array(5) {
     ["class"]=>
     string(11) "Error_Class"
     ["file"]=>
-    string(42) "/Users/dsp/dev/c/xdebug/tests/bug00241.php"
+    string(43) "/Users/johann/src/xdebug/tests/bug00241.php"
     ["line"]=>
     int(26)
     ["params"]=>

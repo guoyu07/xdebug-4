@@ -1,15 +1,15 @@
-srcdir = /Users/dsp/dev/c/xdebug
-builddir = /Users/dsp/dev/c/xdebug
-top_srcdir = /Users/dsp/dev/c/xdebug
-top_builddir = /Users/dsp/dev/c/xdebug
+srcdir = /Users/johann/src/xdebug
+builddir = /Users/johann/src/xdebug
+top_srcdir = /Users/johann/src/xdebug
+top_builddir = /Users/johann/src/xdebug
 EGREP = /usr/bin/grep -E
-SED = /opt/local/bin/gsed
-CONFIGURE_COMMAND = './configure'
-CONFIGURE_OPTIONS =
+SED = /opt/local/bin//gsed
+CONFIGURE_COMMAND = './configure' '--enable-xdebug'
+CONFIGURE_OPTIONS = '--enable-xdebug'
 SHLIB_SUFFIX_NAME = dylib
 SHLIB_DL_SUFFIX_NAME = so
 ZEND_EXT_TYPE = zend_extension
-RE2C = re2c
+RE2C = exit 0;
 AWK = gawk
 shared_objects_xdebug = xdebug.lo xdebug_code_coverage.lo xdebug_com.lo xdebug_compat.lo xdebug_handler_dbgp.lo xdebug_handlers.lo xdebug_llist.lo xdebug_hash.lo xdebug_private.lo xdebug_profiler.lo xdebug_set.lo xdebug_stack.lo xdebug_str.lo xdebug_superglobals.lo xdebug_tracing.lo xdebug_var.lo xdebug_xml.lo usefulstuff.lo
 PHP_PECL_EXTENSION = xdebug
@@ -22,7 +22,7 @@ prefix = /opt/local
 exec_prefix = $(prefix)
 libdir = ${exec_prefix}/lib
 prefix = /opt/local
-phplibdir = /Users/dsp/dev/c/xdebug/modules
+phplibdir = /Users/johann/src/xdebug/modules
 phpincludedir = /opt/local/include/php
 CC = cc
 CFLAGS = -g -O0
@@ -30,13 +30,13 @@ CFLAGS_CLEAN = $(CFLAGS)
 CPP = cc -E
 CPPFLAGS = -DHAVE_CONFIG_H
 CXX =
-CXXFLAGS = -O0
+CXXFLAGS =
 CXXFLAGS_CLEAN = $(CXXFLAGS)
-EXTENSION_DIR = /opt/local/lib/php/extensions/debug-non-zts-20100409
+EXTENSION_DIR = /opt/local/lib/php/extensions/no-debug-non-zts-20090626
 PHP_EXECUTABLE = /opt/local/bin/php
 EXTRA_LDFLAGS =
 EXTRA_LIBS =
-INCLUDES = -I/opt/local/include/php -I/opt/local/include/php/main -I/opt/local/include/php/TSRM -I/opt/local/include/php/Zend -I/opt/local/include/php/ext -I/opt/local/include/php/ext/date/lib
+INCLUDES = -I/opt/local/include/php -I/opt/local/include/php/main -I/opt/local/include/php/TSRM -I/opt/local/include/php/Zend -I/opt/local/include/php/ext -I/opt/local/include/php/ext/date/lib -I/opt/local/include
 LFLAGS =
 LDFLAGS =
 SHARED_LIBTOOL =
@@ -124,7 +124,7 @@ PHP_TEST_SHARED_EXTENSIONS =  ` \
 			. $$i; $(top_srcdir)/build/shtool echo -n -- " -d $(ZEND_EXT_TYPE)=$(top_builddir)/modules/$$dlname"; \
 		done; \
 	fi`
-PHP_DEPRECATED_DIRECTIVES_REGEX = '^(magic_quotes_(gpc|runtime|sybase)?|(zend_)?extension(_debug)?(_ts)?)[\t\ ]*='
+PHP_DEPRECATED_DIRECTIVES_REGEX = '^(define_syslog_variables|register_(globals|long_arrays)?|safe_mode|magic_quotes_(gpc|runtime|sybase)?|(zend_)?extension(_debug)?(_ts)?)[\t\ ]*='
 
 test: all
 	-@if test ! -z "$(PHP_EXECUTABLE)" && test -x "$(PHP_EXECUTABLE)"; then \
@@ -190,42 +190,42 @@ show-install-instructions:
 	@$(top_srcdir)/build/shtool echo -n -e %b
 	@echo
 	@echo
-xdebug.lo: /Users/dsp/dev/c/xdebug/xdebug.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug.c -o xdebug.lo 
-xdebug_code_coverage.lo: /Users/dsp/dev/c/xdebug/xdebug_code_coverage.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_code_coverage.c -o xdebug_code_coverage.lo 
-xdebug_com.lo: /Users/dsp/dev/c/xdebug/xdebug_com.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_com.c -o xdebug_com.lo 
-xdebug_compat.lo: /Users/dsp/dev/c/xdebug/xdebug_compat.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_compat.c -o xdebug_compat.lo 
-xdebug_handler_dbgp.lo: /Users/dsp/dev/c/xdebug/xdebug_handler_dbgp.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_handler_dbgp.c -o xdebug_handler_dbgp.lo 
-xdebug_handlers.lo: /Users/dsp/dev/c/xdebug/xdebug_handlers.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_handlers.c -o xdebug_handlers.lo 
-xdebug_llist.lo: /Users/dsp/dev/c/xdebug/xdebug_llist.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_llist.c -o xdebug_llist.lo 
-xdebug_hash.lo: /Users/dsp/dev/c/xdebug/xdebug_hash.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_hash.c -o xdebug_hash.lo 
-xdebug_private.lo: /Users/dsp/dev/c/xdebug/xdebug_private.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_private.c -o xdebug_private.lo 
-xdebug_profiler.lo: /Users/dsp/dev/c/xdebug/xdebug_profiler.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_profiler.c -o xdebug_profiler.lo 
-xdebug_set.lo: /Users/dsp/dev/c/xdebug/xdebug_set.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_set.c -o xdebug_set.lo 
-xdebug_stack.lo: /Users/dsp/dev/c/xdebug/xdebug_stack.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_stack.c -o xdebug_stack.lo 
-xdebug_str.lo: /Users/dsp/dev/c/xdebug/xdebug_str.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_str.c -o xdebug_str.lo 
-xdebug_superglobals.lo: /Users/dsp/dev/c/xdebug/xdebug_superglobals.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_superglobals.c -o xdebug_superglobals.lo 
-xdebug_tracing.lo: /Users/dsp/dev/c/xdebug/xdebug_tracing.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_tracing.c -o xdebug_tracing.lo 
-xdebug_var.lo: /Users/dsp/dev/c/xdebug/xdebug_var.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_var.c -o xdebug_var.lo 
-xdebug_xml.lo: /Users/dsp/dev/c/xdebug/xdebug_xml.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/xdebug_xml.c -o xdebug_xml.lo 
-usefulstuff.lo: /Users/dsp/dev/c/xdebug/usefulstuff.c
-	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/dsp/dev/c/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/dsp/dev/c/xdebug/usefulstuff.c -o usefulstuff.lo 
+xdebug.lo: /Users/johann/src/xdebug/xdebug.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug.c -o xdebug.lo 
+xdebug_code_coverage.lo: /Users/johann/src/xdebug/xdebug_code_coverage.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_code_coverage.c -o xdebug_code_coverage.lo 
+xdebug_com.lo: /Users/johann/src/xdebug/xdebug_com.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_com.c -o xdebug_com.lo 
+xdebug_compat.lo: /Users/johann/src/xdebug/xdebug_compat.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_compat.c -o xdebug_compat.lo 
+xdebug_handler_dbgp.lo: /Users/johann/src/xdebug/xdebug_handler_dbgp.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_handler_dbgp.c -o xdebug_handler_dbgp.lo 
+xdebug_handlers.lo: /Users/johann/src/xdebug/xdebug_handlers.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_handlers.c -o xdebug_handlers.lo 
+xdebug_llist.lo: /Users/johann/src/xdebug/xdebug_llist.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_llist.c -o xdebug_llist.lo 
+xdebug_hash.lo: /Users/johann/src/xdebug/xdebug_hash.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_hash.c -o xdebug_hash.lo 
+xdebug_private.lo: /Users/johann/src/xdebug/xdebug_private.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_private.c -o xdebug_private.lo 
+xdebug_profiler.lo: /Users/johann/src/xdebug/xdebug_profiler.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_profiler.c -o xdebug_profiler.lo 
+xdebug_set.lo: /Users/johann/src/xdebug/xdebug_set.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_set.c -o xdebug_set.lo 
+xdebug_stack.lo: /Users/johann/src/xdebug/xdebug_stack.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_stack.c -o xdebug_stack.lo 
+xdebug_str.lo: /Users/johann/src/xdebug/xdebug_str.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_str.c -o xdebug_str.lo 
+xdebug_superglobals.lo: /Users/johann/src/xdebug/xdebug_superglobals.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_superglobals.c -o xdebug_superglobals.lo 
+xdebug_tracing.lo: /Users/johann/src/xdebug/xdebug_tracing.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_tracing.c -o xdebug_tracing.lo 
+xdebug_var.lo: /Users/johann/src/xdebug/xdebug_var.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_var.c -o xdebug_var.lo 
+xdebug_xml.lo: /Users/johann/src/xdebug/xdebug_xml.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/xdebug_xml.c -o xdebug_xml.lo 
+usefulstuff.lo: /Users/johann/src/xdebug/usefulstuff.c
+	$(LIBTOOL) --mode=compile $(CC)  -I. -I/Users/johann/src/xdebug $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/johann/src/xdebug/usefulstuff.c -o usefulstuff.lo 
 $(phplibdir)/xdebug.la: ./xdebug.la
 	$(LIBTOOL) --mode=install cp ./xdebug.la $(phplibdir)
 

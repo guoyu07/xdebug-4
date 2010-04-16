@@ -39,6 +39,8 @@
 #include "ext/standard/php_lcg.h"
 #include "ext/standard/flock_compat.h"
 #include "main/php_ini.h"
+#include <mach/task.h>
+
 
 #define READ_BUFFER_SIZE 128
 
@@ -187,6 +189,24 @@ double xdebug_get_utime(void)
 	}
 #endif
 	return 0;
+}
+
+double xdebug_get_cputime(void)
+{
+/* mac stuff 
+	task_t task = MACH_PORT_NULL;
+	struct task_basic_info t_info;
+	mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;
+	if (KERN_SUCCESS == task_info(mach_task_self(),
+		TASK_BASIC_INFO, (task_info_t)&t_info, &t_info_count)) {
+		return t_info.user_time.seconds + (double) (t_info.user_time.microseconds / MICRO_IN_SEC);
+	}
+        return 0;
+*/
+	struct rusage rusage;
+        getrusage (0, &rusage);
+        return (rusage.ru_utime.tv_sec + (double) (rusage.ru_utime.tv_usec / MICRO_IN_SEC)
+   	      + rusage.ru_stime.tv_sec + (double) (rusage.ru_stime.tv_usec / MICRO_IN_SEC));
 }
 
 char* xdebug_get_time(void)

@@ -30,10 +30,10 @@
 # the same distribution terms that you use for the rest of that program.
 
 # A sed program that does not truncate output.
-SED="/opt/local/bin/gsed"
+SED="/opt/local/bin//gsed"
 
 # Sed that helps us avoid accidentally triggering echo(1) options like -n.
-Xsed="/opt/local/bin/gsed -e 1s/^X//"
+Xsed="/opt/local/bin//gsed -e 1s/^X//"
 
 # The HP-UX ksh and POSIX shell print the target directory to stdout
 # if CDPATH is set.
@@ -44,7 +44,7 @@ available_tags=""
 
 # ### BEGIN LIBTOOL CONFIG
 
-# Libtool was configured on host Shedir.local:
+# Libtool was configured on host johann-peter-hartmanns-macbook-pro.local:
 
 # Shell to use when invoking shell scripts.
 SHELL="/bin/sh"
@@ -65,14 +65,14 @@ allow_libtool_libs_with_static_runtimes=no
 fast_install=needless
 
 # The host system.
-host_alias=i386-apple-darwin10.3.0
-host=i386-apple-darwin10.3.0
-host_os=darwin10.3.0
+host_alias=i386-apple-darwin10.2.0
+host=i386-apple-darwin10.2.0
+host_os=darwin10.2.0
 
 # The build system.
 build_alias=
-build=i386-apple-darwin10.3.0
-build_os=darwin10.3.0
+build=i386-apple-darwin10.2.0
+build_os=darwin10.2.0
 
 # An echo program that does not interpret backslashes.
 echo="/bin/echo"

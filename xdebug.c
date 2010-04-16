@@ -545,9 +545,6 @@ PHP_MINIT_FUNCTION(xdebug)
 	XDEBUG_SET_OPCODE_OVERRIDE_COMMON(ZEND_PRE_INC_OBJ);
 	XDEBUG_SET_OPCODE_OVERRIDE_COMMON(ZEND_SWITCH_FREE);
 	XDEBUG_SET_OPCODE_OVERRIDE_COMMON(ZEND_QM_ASSIGN);
-#if (PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 3) || PHP_MAJOR_VERSION >= 6
-	XDEBUG_SET_OPCODE_OVERRIDE_COMMON(ZEND_DECLARE_LAMBDA_FUNCTION);
-#endif
 	XDEBUG_SET_OPCODE_OVERRIDE_ASSIGN(include_or_eval, ZEND_INCLUDE_OR_EVAL);
 
 	XDEBUG_SET_OPCODE_OVERRIDE_ASSIGN(assign, ZEND_ASSIGN);
@@ -710,6 +707,7 @@ PHP_RINIT_FUNCTION(xdebug)
 	XG(profile_file)  = NULL;
 	XG(profile_filename) = NULL;
 	XG(prev_memory)   = 0;
+        XG(peakprev_memory) = 0; 
 	XG(function_count) = -1;
 	XG(active_symbol_table) = NULL;
 	XG(This) = NULL;
@@ -1075,12 +1073,6 @@ void xdebug_execute(zend_op_array *op_array TSRMLS_DC)
 	xdebug_llist_element *le;
 	int                   eval_id = 0;
 
-	/* if we're in a ZEND_EXT_STMT, we ignore this function call as it's likely
-	   that it's just being called to check for breakpoints with conditions */
-	if (edata && edata->opline && edata->opline->opcode == ZEND_EXT_STMT) {
-		xdebug_old_execute(op_array TSRMLS_CC);
-		return;
-	}
 
 	if (XG(no_exec) == 1) {
 		php_printf("DEBUG SESSION ENDED");
@@ -1467,12 +1459,6 @@ PHP_FUNCTION(xdebug_debug_zval)
 		WRONG_PARAM_COUNT;
 	}
 	
-#if PHP_VERSION_ID >= 50300
-	if (!EG(active_symbol_table)) {
-		zend_rebuild_symbol_table(TSRMLS_C);
-	}
-#endif
-
 	for (i = 0; i < argc; i++) {
 		if (Z_TYPE_PP(args[i]) == IS_STRING) {
 			XG(active_symbol_table) = EG(active_symbol_table);
@@ -1513,13 +1499,7 @@ PHP_FUNCTION(xdebug_debug_zval_stdout)
 		efree(args);
 		WRONG_PARAM_COUNT;
 	}
-
-#if PHP_VERSION_ID >= 50300
-	if (!EG(active_symbol_table)) {
-		zend_rebuild_symbol_table(TSRMLS_C);
-	}
-#endif
-
+	
 	for (i = 0; i < argc; i++) {
 		if (Z_TYPE_PP(args[i]) == IS_STRING) {
 			XG(active_symbol_table) = EG(active_symbol_table);
@@ -1833,7 +1813,7 @@ ZEND_DLEXPORT zend_extension zend_extension_entry = {
 	XDEBUG_NAME,
 	XDEBUG_VERSION,
 	XDEBUG_AUTHOR,
-	XDEBUG_URL_FAQ,
+	XDEBUG_URL,
 	XDEBUG_COPYRIGHT_SHORT,
 	xdebug_zend_startup,
 	xdebug_zend_shutdown,
