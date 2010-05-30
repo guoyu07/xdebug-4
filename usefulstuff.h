@@ -132,5 +132,7 @@ static const unsigned int xdebug_crc32tab[256] = {
 };
 
 long xdebug_crc32(const char *string, int str_len);
+void xdebug_init_cputime_statistics(void);
+double xdebug_get_cputime(void);
 
 #endif

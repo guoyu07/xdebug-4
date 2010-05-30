@@ -39,10 +39,36 @@
 #include "ext/standard/php_lcg.h"
 #include "ext/standard/flock_compat.h"
 #include "main/php_ini.h"
-#include <mach/task.h>
 
+ZEND_DECLARE_MODULE_GLOBALS(xdebug)
+
+#ifdef __APPLE__
+/*
+ * Patch for compiling in Mac OS X Leopard
+ * @author Svilen Spasov <s.spasov@gmail.com> 
+ */
+#    include <mach/mach_init.h>
+#    include <mach/thread_policy.h>
+#    define cpu_set_t thread_affinity_policy_data_t
+#    define CPU_SET(cpu_id, new_mask) \
+        (*(new_mask)).affinity_tag = (cpu_id + 1)
+#    define CPU_ZERO(new_mask)                 \
+        (*(new_mask)).affinity_tag = THREAD_AFFINITY_TAG_NULL
+#   define SET_AFFINITY(pid, size, mask)       \
+        thread_policy_set(mach_thread_self(), THREAD_AFFINITY_POLICY, mask, \
+                          THREAD_AFFINITY_POLICY_COUNT)
+#else
+/* For sched_getaffinity, sched_setaffinity */
+# include <sched.h>
+# define SET_AFFINITY(pid, size, mask) sched_setaffinity(0, size, mask)
+# define GET_AFFINITY(pid, size, mask) sched_getaffinity(0, size, mask)
+#endif /* __FreeBSD__ */
 
 #define READ_BUFFER_SIZE 128
+
+struct xdebug_cputime_global {
+} xdebug_cputime_globals;
+
 
 char* xdebug_fd_read_line_delim(int socket, fd_buf *context, int type, unsigned char delim, int *length)
 {
@@ -191,22 +217,112 @@ double xdebug_get_utime(void)
 	return 0;
 }
 
+/**
+ * Get time stamp counter (TSC) value via 'rdtsc' instruction.
+ *
+ * @return 64 bit unsigned integer
+ * @author cjiang
+ */
+inline long xdebug_cycle_timer() {
+  int __a,__d;
+  long val;
+  asm volatile("rdtsc" : "=a" (__a), "=d" (__d));
+  (val) = ((long)__a) | (((long)__d)<<32);
+  return val;
+}
+
+/**
+ * Bind the current process to a specified CPU. This function is to ensure that
+ * the OS won't schedule the process to different processors, which would make
+ * values read by rdtsc unreliable.
+ *
+ * @param int cpu_id, the id of the logical cpu to be bound to.
+ * @return int, 0 on success, and -1 on failure.
+ *
+ * @author cjiang
+ */
+int xdebug_bind_to_cpu(int cpu_id) {
+  cpu_set_t new_mask;
+
+  CPU_ZERO(&new_mask);
+  CPU_SET(cpu_id, &new_mask);
+
+  if (SET_AFFINITY(0, sizeof(cpu_set_t), &new_mask) < 0) {
+    perror("setaffinity");
+    return -1;
+  }
+
+  /* record the cpu_id the process is bound to. */
+  XG(cpu_cur_id) = cpu_id;
+
+  return 0;
+}
+
+/**
+ * Convert from TSC counter values to equivalent microseconds.
+ *
+ * @param long count, TSC count value
+ * @param double cpu_frequency, the CPU clock rate (MHz)
+ * @return 64 bit unsigned integer
+ *
+ * @author cjiang
+ */
+inline double xdebug_get_us_from_tsc(long count, double cpu_frequency) {
+  return count / cpu_frequency;
+}
+/**
+ * Get time delta in microseconds.
+ */
+static long xdebug_get_us_interval(struct timeval *start, struct timeval *end) {
+  return (((end->tv_sec - start->tv_sec) * 1000000)
+          + (end->tv_usec - start->tv_usec));
+}
+
+/**
+ * This is a microbenchmark to get cpu frequency the process is running on. The
+ * returned value is used to convert TSC counter values to microseconds.
+ *
+ * NOTE: On Linux it might be better to use /sys/devices/system/cpu/XZY/cpufreq.
+ *
+ * @return double.
+ * @author cjiang
+ */
+static double xdebug_get_cpu_frequency(int cpu) {
+    struct timeval start;
+    struct timeval end;
+    long tsc_start, tsc_end;
+
+    if (bind_to_cpu(cpu) != 0) {
+        /* bailout */
+        fprintf(stderr, "Cannot bind to CPU %d\n", cpu);
+        return 0.0;
+    }
+
+    if (gettimeofday(&start, 0)) {
+        perror("gettimeofday");
+        return 0.0;
+    }
+    tsc_start = xdebug_cycle_timer();
+    /* Sleep for 5 miliseconds. Comparaing with gettimeofday's  few microseconds
+     * execution time, this should be enough. */
+    usleep(5000);
+    if (gettimeofday(&end, 0)) {
+        perror("gettimeofday");
+        return 0.0;
+    }
+    tsc_end = xdebug_cycle_timer();
+    return (tsc_end - tsc_start) * 1.0 / (xdebug_get_us_interval(&start, &end));
+}
+
 double xdebug_get_cputime(void)
 {
-/* mac stuff 
-	task_t task = MACH_PORT_NULL;
-	struct task_basic_info t_info;
-	mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;
-	if (KERN_SUCCESS == task_info(mach_task_self(),
-		TASK_BASIC_INFO, (task_info_t)&t_info, &t_info_count)) {
-		return t_info.user_time.seconds + (double) (t_info.user_time.microseconds / MICRO_IN_SEC);
-	}
-        return 0;
-*/
-	struct rusage rusage;
-        getrusage (0, &rusage);
-        return (rusage.ru_utime.tv_sec + (double) (rusage.ru_utime.tv_usec / MICRO_IN_SEC)
-   	      + rusage.ru_stime.tv_sec + (double) (rusage.ru_stime.tv_usec / MICRO_IN_SEC));
+    long time;	/* it seems that xhprof thinks this are 10^-9 seconds */
+    double ns;
+
+    time = xdebug_cycle_timer();
+	ns = xdebug_get_us_from_tsc((time - XG(cpu_stime)), XG(cpu_frequency));
+
+	return ns;
 }
 
 char* xdebug_get_time(void)
@@ -654,4 +770,31 @@ int xdebug_format_output_filename(char **filename, char *format, char *script_na
 	*filename = fname.d;
 
 	return fname.l;
+}
+
+void xdebug_init_cputime_statistics()
+{
+    double frequency;
+    int cpu;
+
+	XG(cpu_num) = sysconf(_SC_NPROCESSORS_ONLN); 
+
+    /* TODO: get random cpu time */
+    srandom(time(NULL));
+    cpu = random() % XG(cpu_num);
+
+#if defined (HAVE_SYSCONF) && defined (_SC_CLK_TCK)
+	frequency = sysconf(_SC_CLK_TCK);
+#else
+    frequency = xdebug_get_cpu_frequency(cpu);
+#endif
+    if (frequency <= 0.0) {
+        fprintf(stderr, "Cannot get CPU frequencies.");
+        return;
+    } 
+
+    xdebug_bind_to_cpu(cpu);
+    XG(cpu_frequency) = frequency;
+	XG(cpu_cur_id) = cpu;
+    XG(cpu_stime) = xdebug_cycle_timer();
 }

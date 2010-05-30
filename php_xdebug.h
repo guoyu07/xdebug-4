@@ -252,9 +252,15 @@ ZEND_BEGIN_MODULE_GLOBALS(xdebug)
 	/* aggregate profiling */
 	HashTable  aggr_calls;
 	zend_bool  profiler_aggregate;
+	zend_bool  profiler_cputime;
 
 	/* scream */
 	zend_bool  do_scream;
+
+    unsigned int cpu_num; /* number of cpu's online */
+    unsigned int cpu_cur_id;
+    unsigned long cpu_stime;
+    double cpu_frequency;
 ZEND_END_MODULE_GLOBALS(xdebug)
 
 #ifdef ZTS
