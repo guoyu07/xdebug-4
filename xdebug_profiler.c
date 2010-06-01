@@ -16,6 +16,7 @@
    +----------------------------------------------------------------------+
  */
 
+#include <math.h>
 #include "php.h"
 #include "TSRM.h"
 #include "php_globals.h"
@@ -192,7 +193,8 @@ void xdebug_profiler_function_user_end(function_stack_entry *fse, zend_op_array*
 	xdfree(tmp_name);
 
 	if (fse->function.function && strcmp(fse->function.function, "{main}") == 0) {
-		fprintf(XG(profile_file), "\nsummary: %lu %ld %lu %lu\n\n", (unsigned long) (fse->profile.time * 1000000), (fse->profile.memory), (unsigned long) (fse->profile.cputime), (fse->profile.peakmemory));
+		fprintf(XG(profile_file), "\nsummary: %lu %ld %ld %lu\n\n", (unsigned long) (fse->profile.time * 1000000), (fse->profile.memory),
+				lround(fse->profile.cputime), (fse->profile.peakmemory));
 	}
 	fflush(XG(profile_file));
 
