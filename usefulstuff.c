@@ -16,6 +16,11 @@
    +----------------------------------------------------------------------+
  */
 
+#ifdef linux
+/* To enable CPU_ZERO and CPU_SET, etc.     */
+# define _GNU_SOURCE
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #ifndef WIN32
@@ -40,13 +45,14 @@
 #include "ext/standard/flock_compat.h"
 #include "main/php_ini.h"
 
-ZEND_DECLARE_MODULE_GLOBALS(xdebug)
+ZEND_EXTERN_MODULE_GLOBALS(xdebug)
 
 #ifdef __APPLE__
 /*
  * Patch for compiling in Mac OS X Leopard
  * @author Svilen Spasov <s.spasov@gmail.com> 
  */
+#    include <mach/task.h>
 #    include <mach/mach_init.h>
 #    include <mach/thread_policy.h>
 #    define cpu_set_t thread_affinity_policy_data_t
@@ -57,12 +63,18 @@ ZEND_DECLARE_MODULE_GLOBALS(xdebug)
 #   define SET_AFFINITY(pid, size, mask)       \
         thread_policy_set(mach_thread_self(), THREAD_AFFINITY_POLICY, mask, \
                           THREAD_AFFINITY_POLICY_COUNT)
-#else
+#elif linux
 /* For sched_getaffinity, sched_setaffinity */
 # include <sched.h>
 # define SET_AFFINITY(pid, size, mask) sched_setaffinity(0, size, mask)
 # define GET_AFFINITY(pid, size, mask) sched_getaffinity(0, size, mask)
-#endif /* __FreeBSD__ */
+# if _POSIX_C_SOURCE >= 199309L
+#  include <time.h>
+#  define HAVE_CLOCK_GETTIME 1
+# endif
+#else
+#   error "This system is not supported"
+#endif /* __Apple*/
 
 #define READ_BUFFER_SIZE 128
 
@@ -224,11 +236,20 @@ double xdebug_get_utime(void)
  * @author cjiang
  */
 inline long xdebug_cycle_timer() {
+#ifdef HAVE_CLOCK_GETTIME
+  /* this is the linux implementation which is more accurate than using rdtsc */
+  long val;
+  struct timespec tsc;
+  clock_gettime(XG(cpu_cur_id), &tsc);
+  val = ((long) tsc.tv_sec) * 1000000000 + tsc.tv_nsec;
+  return val;
+#else
   int __a,__d;
   long val;
   asm volatile("rdtsc" : "=a" (__a), "=d" (__d));
   (val) = ((long)__a) | (((long)__d)<<32);
   return val;
+#endif
 }
 
 /**
@@ -320,8 +341,11 @@ double xdebug_get_cputime(void)
     double ns;
 
     time = xdebug_cycle_timer();
+#ifdef HAVE_CLOCK_GETTIME
+    ns = time - XG(cpu_stime);
+#else
 	ns = xdebug_get_us_from_tsc((time - XG(cpu_stime)), XG(cpu_frequency));
-
+#endif
 	return ns;
 }
 
@@ -788,11 +812,11 @@ void xdebug_init_cputime_statistics()
 #else
     frequency = xdebug_get_cpu_frequency(cpu);
 #endif
+	/* TODO: Add Windows support */
     if (frequency <= 0.0) {
         fprintf(stderr, "Cannot get CPU frequencies.");
         return;
     } 
-
     xdebug_bind_to_cpu(cpu);
     XG(cpu_frequency) = frequency;
 	XG(cpu_cur_id) = cpu;
