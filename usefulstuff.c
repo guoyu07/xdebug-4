@@ -235,7 +235,10 @@ double xdebug_get_utime(void)
  * @return 64 bit unsigned integer
  * @author cjiang
  */
-inline long xdebug_cycle_timer() {
+inline unsigned long xdebug_cycle_timer() {
+  if (!XG(profiler_cputime)) {
+    return 0.0;
+  }
 #ifdef HAVE_CLOCK_GETTIME
   /* this is the linux implementation which is more accurate than using rdtsc */
   long val;
@@ -244,10 +247,10 @@ inline long xdebug_cycle_timer() {
   val = ((long) tsc.tv_sec) * 1000000000 + tsc.tv_nsec;
   return val;
 #else
-  int __a,__d;
-  long val;
+  unsigned int __a,__d;
+  unsigned long val;
   asm volatile("rdtsc" : "=a" (__a), "=d" (__d));
-  (val) = ((long)__a) | (((long)__d)<<32);
+  (val) = ((unsigned long)__a) | (((unsigned long)__d)<<32);
   return val;
 #endif
 }
@@ -313,7 +316,7 @@ static double xdebug_get_cpu_frequency(int cpu) {
     struct timeval end;
     long tsc_start, tsc_end;
 
-    if (bind_to_cpu(cpu) != 0) {
+    if (xdebug_bind_to_cpu(cpu) != 0) {
         /* bailout */
         fprintf(stderr, "Cannot bind to CPU %d\n", cpu);
         return 0.0;
@@ -337,7 +340,7 @@ static double xdebug_get_cpu_frequency(int cpu) {
 
 double xdebug_get_cputime(void)
 {
-    long time;	/* it seems that xhprof thinks this are 10^-9 seconds */
+    unsigned long time;	/* it seems that xhprof thinks this are 10^-9 seconds */
     double ns;
 
     time = xdebug_cycle_timer();
@@ -798,7 +801,6 @@ int xdebug_format_output_filename(char **filename, char *format, char *script_na
 
 void xdebug_init_cputime_statistics()
 {
-    double frequency;
     int cpu;
 
 	XG(cpu_num) = sysconf(_SC_NPROCESSORS_ONLN); 
@@ -808,17 +810,18 @@ void xdebug_init_cputime_statistics()
     cpu = random() % XG(cpu_num);
 
 #if defined (HAVE_SYSCONF) && defined (_SC_CLK_TCK)
-	frequency = sysconf(_SC_CLK_TCK);
+	XG(cpu_frequency) = sysconf(_SC_CLK_TCK);
 #else
-    frequency = xdebug_get_cpu_frequency(cpu);
+    if (XG(cpu_frequency) <= 0) {
+        XG(cpu_frequency) = (unsigned long) xdebug_get_cpu_frequency(cpu);
+    }
 #endif
 	/* TODO: Add Windows support */
-    if (frequency <= 0.0) {
+    if (XG(cpu_frequency) <= 0.0) {
         fprintf(stderr, "Cannot get CPU frequencies.");
         return;
     } 
     xdebug_bind_to_cpu(cpu);
-    XG(cpu_frequency) = frequency;
-	XG(cpu_cur_id) = cpu;
+    XG(cpu_cur_id) = cpu;
     XG(cpu_stime) = xdebug_cycle_timer();
 }

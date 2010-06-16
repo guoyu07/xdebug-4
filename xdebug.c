@@ -276,6 +276,7 @@ PHP_INI_BEGIN()
 	STD_PHP_INI_BOOLEAN("xdebug.profiler_append",         "0",      PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateBool,   profiler_append,         zend_xdebug_globals, xdebug_globals)
 	STD_PHP_INI_BOOLEAN("xdebug.profiler_aggregate",      "0",      PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateBool,   profiler_aggregate,      zend_xdebug_globals, xdebug_globals)
 	STD_PHP_INI_BOOLEAN("xdebug.profiler_cputime",      "0",      PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateBool,   profiler_cputime,      zend_xdebug_globals, xdebug_globals)
+	STD_PHP_INI_ENTRY("xdebug.profiler_cpufreq",      "0",      PHP_INI_SYSTEM, OnUpdateLong,   cpu_frequency,      zend_xdebug_globals, xdebug_globals)
 
 	/* Remote debugger settings */
 	STD_PHP_INI_BOOLEAN("xdebug.remote_enable",   "0",   PHP_INI_SYSTEM|PHP_INI_PERDIR, OnUpdateBool,   remote_enable,     zend_xdebug_globals, xdebug_globals)
@@ -688,6 +689,7 @@ static void xdebug_stack_element_dtor(void *dummy, void *elem)
 
 PHP_RINIT_FUNCTION(xdebug)
 {
+	int enabled;
 	zend_function *orig;
 	char *idekey;
 	zval **dummy;
@@ -767,6 +769,9 @@ PHP_RINIT_FUNCTION(xdebug)
 		zend_error_cb = new_error_cb;
 		zend_throw_exception_hook = xdebug_throw_exception_hook;
 	}
+
+	enabled = XG(profiler_enabled);
+
 	XG(remote_enabled) = 0;
 	XG(profiler_enabled) = 0;
 	XG(breakpoints_allowed) = 1;
@@ -810,8 +815,12 @@ PHP_RINIT_FUNCTION(xdebug)
 		SG(request_info).no_headers = 1;
 	}
 
-	if (XG(profiler_enabled) && XG(profiler_cputime)) {
+	if (enabled && XG(profiler_cputime)) {
+#ifdef PHP_WIN32
+		php_error(E_WARNING, "CPU time profiling is not avaialble on Windows");
+#else
 		xdebug_init_cputime_statistics();
+#endif
 	}
 
 	return SUCCESS;

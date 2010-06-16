@@ -260,7 +260,7 @@ ZEND_BEGIN_MODULE_GLOBALS(xdebug)
     unsigned int cpu_num; /* number of cpu's online */
     unsigned int cpu_cur_id;
     unsigned long cpu_stime;
-    double cpu_frequency;
+    unsigned long cpu_frequency;
 ZEND_END_MODULE_GLOBALS(xdebug)
 
 #ifdef ZTS
