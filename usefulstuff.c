@@ -78,8 +78,10 @@ ZEND_EXTERN_MODULE_GLOBALS(xdebug)
 
 #define READ_BUFFER_SIZE 128
 
-struct xdebug_cputime_global {
-} xdebug_cputime_globals;
+struct xdebug_cputime_func {
+	double (*get_cputime)(void);
+	int (*bind_to_cpu)(int);
+} xdebug_cputime_funcs;
 
 
 char* xdebug_fd_read_line_delim(int socket, fd_buf *context, int type, unsigned char delim, int *length)
@@ -230,32 +232,6 @@ double xdebug_get_utime(void)
 }
 
 /**
- * Get time stamp counter (TSC) value via 'rdtsc' instruction.
- *
- * @return 64 bit unsigned integer
- * @author cjiang
- */
-inline unsigned long xdebug_cycle_timer() {
-  if (!XG(profiler_cputime)) {
-    return 0.0;
-  }
-#ifdef HAVE_CLOCK_GETTIME
-  /* this is the linux implementation which is more accurate than using rdtsc */
-  long val;
-  struct timespec tsc;
-  clock_gettime(XG(cpu_cur_id), &tsc);
-  val = ((long) tsc.tv_sec) * 1000000000 + tsc.tv_nsec;
-  return val;
-#else
-  unsigned int __a,__d;
-  unsigned long val;
-  asm volatile("rdtsc" : "=a" (__a), "=d" (__d));
-  (val) = ((unsigned long)__a) | (((unsigned long)__d)<<32);
-  return val;
-#endif
-}
-
-/**
  * Bind the current process to a specified CPU. This function is to ensure that
  * the OS won't schedule the process to different processors, which would make
  * values read by rdtsc unreliable.
@@ -306,8 +282,6 @@ static long xdebug_get_us_interval(struct timeval *start, struct timeval *end) {
  * This is a microbenchmark to get cpu frequency the process is running on. The
  * returned value is used to convert TSC counter values to microseconds.
  *
- * NOTE: On Linux it might be better to use /sys/devices/system/cpu/XZY/cpufreq.
- *
  * @return double.
  * @author cjiang
  */
@@ -316,7 +290,7 @@ static double xdebug_get_cpu_frequency(int cpu) {
     struct timeval end;
     long tsc_start, tsc_end;
 
-    if (xdebug_bind_to_cpu(cpu) != 0) {
+    if (xdebug_cputime_funcs.bind_to_cpu(cpu) != 0) {
         /* bailout */
         fprintf(stderr, "Cannot bind to CPU %d\n", cpu);
         return 0.0;
@@ -338,18 +312,43 @@ static double xdebug_get_cpu_frequency(int cpu) {
     return (tsc_end - tsc_start) * 1.0 / (xdebug_get_us_interval(&start, &end));
 }
 
+/**
+ * Return the current cputime
+ */
 double xdebug_get_cputime(void)
 {
-    unsigned long time;	/* it seems that xhprof thinks this are 10^-9 seconds */
-    double ns;
+	if (!XG(profiler_cputime) || !xdebug_cputime_funcs.get_cputime) {
+		return 0.0;
+	}
+	xdebug_cputime_funcs.get_cputime();
+}
 
-    time = xdebug_cycle_timer();
-#ifdef HAVE_CLOCK_GETTIME
-    ns = time - XG(cpu_stime);
-#else
-	ns = xdebug_get_us_from_tsc((time - XG(cpu_stime)), XG(cpu_frequency));
-#endif
-	return ns;
+/**
+ * Linux specific implementaiton based on clock_gettime
+ */
+double xdebug_linux_get_cputime(void)
+{
+	unsigned long time;
+	double ns;
+	struct timespec tsc;
+
+	clock_gettime(XG(cpu_cur_id), &tsc);
+
+	time = ((unsigned long) tsc.tv_sec) * 1000000000 + tsc.tv_nsec;
+    return time - XG(cpu_stime);
+}
+
+/**
+ * Implementation based on rdtsc counter, which is not very accurate.
+ */
+double xdebug_fallback_get_cputime(void)
+{
+	unsigned int __a,__d;
+	unsigned long time;
+	asm volatile("rdtsc" : "=a" (__a), "=d" (__d));
+	(time) = ((unsigned long)__a) | (((unsigned long)__d)<<32);
+
+	return xdebug_get_us_from_tsc((time - XG(cpu_stime)), XG(cpu_frequency));
 }
 
 char* xdebug_get_time(void)
@@ -801,27 +800,32 @@ int xdebug_format_output_filename(char **filename, char *format, char *script_na
 
 void xdebug_init_cputime_statistics()
 {
-    int cpu;
+	int cpu;
+
+	xdebug_cputime_funcs.bind_to_cpu = xdebug_bind_to_cpu;
+#ifdef linux
+	xdebug_cputime_funcs.get_cputime = xdebug_linux_get_cputime;
+#else
+	xdebug_cputime_funcs.get_cputime = xdebug_fallback_get_cputime;
+#endif
 
 	XG(cpu_num) = sysconf(_SC_NPROCESSORS_ONLN); 
+	srandom(time(NULL));
+	cpu = random() % XG(cpu_num);
+    xdebug_cputime_funcs.bind_to_cpu(cpu);
 
-    /* TODO: get random cpu time */
-    srandom(time(NULL));
-    cpu = random() % XG(cpu_num);
-
-#if defined (HAVE_SYSCONF) && defined (_SC_CLK_TCK)
+#if defined (_SC_CLK_TCK)
 	XG(cpu_frequency) = sysconf(_SC_CLK_TCK);
 #else
-    if (XG(cpu_frequency) <= 0) {
+	if (XG(cpu_frequency) <= 0) {
         XG(cpu_frequency) = (unsigned long) xdebug_get_cpu_frequency(cpu);
     }
 #endif
-	/* TODO: Add Windows support */
     if (XG(cpu_frequency) <= 0.0) {
         fprintf(stderr, "Cannot get CPU frequencies.");
         return;
     } 
-    xdebug_bind_to_cpu(cpu);
+
     XG(cpu_cur_id) = cpu;
-    XG(cpu_stime) = xdebug_cycle_timer();
+    XG(cpu_stime) = xdebug_cputime_funcs.get_cputime();
 }

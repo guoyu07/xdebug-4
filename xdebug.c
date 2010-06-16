@@ -689,7 +689,6 @@ static void xdebug_stack_element_dtor(void *dummy, void *elem)
 
 PHP_RINIT_FUNCTION(xdebug)
 {
-	int enabled;
 	zend_function *orig;
 	char *idekey;
 	zval **dummy;
@@ -770,8 +769,6 @@ PHP_RINIT_FUNCTION(xdebug)
 		zend_throw_exception_hook = xdebug_throw_exception_hook;
 	}
 
-	enabled = XG(profiler_enabled);
-
 	XG(remote_enabled) = 0;
 	XG(profiler_enabled) = 0;
 	XG(breakpoints_allowed) = 1;
@@ -815,7 +812,11 @@ PHP_RINIT_FUNCTION(xdebug)
 		SG(request_info).no_headers = 1;
 	}
 
-	if (enabled && XG(profiler_cputime)) {
+	if (!XG(profiler_enable)) {
+		XG(profiler_cputime) = 0;
+	}
+
+	if (XG(profiler_cputime)) {
 #ifdef PHP_WIN32
 		php_error(E_WARNING, "CPU time profiling is not avaialble on Windows");
 #else
